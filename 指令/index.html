@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ChatGPT 快速指令庫</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--text:#15171a;--muted:#687078;--accent:#16a37d;--line:#e3e6e8;--shadow:0 8px 24px rgba(0,0,0,.06)}
+*{box-sizing:border-box} body{margin:0;font-family:system-ui,-apple-system,"Noto Sans TC","PingFang TC",sans-serif;background:var(--bg);color:var(--text)}
+header{position:sticky;top:0;z-index:10;background:rgba(246,247,249,.94);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.wrap{max-width:1180px;margin:auto;padding:22px}.hero{display:flex;gap:18px;align-items:end;justify-content:space-between;flex-wrap:wrap}.hero h1{margin:0;font-size:30px}.hero p{margin:6px 0 0;color:var(--muted)}
+.search{flex:1;min-width:280px;max-width:520px;position:relative}.search input{width:100%;padding:14px 16px;border:1px solid var(--line);border-radius:14px;font-size:16px;outline:none;background:#fff}.search input:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(22,163,125,.12)}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin-top:18px}.filters button{border:1px solid var(--line);background:#fff;padding:9px 12px;border-radius:999px;cursor:pointer}.filters button.active{background:var(--text);color:#fff;border-color:var(--text)}
+main{max-width:1180px;margin:auto;padding:24px 22px 50px}.meta{color:var(--muted);margin-bottom:18px}.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:17px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px}.top{display:flex;justify-content:space-between;gap:10px;align-items:start}.cmd{font-size:19px;font-weight:800}.num{color:var(--muted);font-size:13px}.desc{line-height:1.55}.tag{display:inline-block;font-size:12px;background:#eaf8f4;color:#08785b;border-radius:999px;padding:5px 9px}.copy{align-self:flex-end;border:0;background:#f0f2f4;padding:7px 10px;border-radius:9px;cursor:pointer}.copy:hover{background:#e5e8eb}.empty{display:none;text-align:center;padding:70px;color:var(--muted)}
+footer{text-align:center;color:var(--muted);padding:30px} @media(max-width:600px){.hero h1{font-size:25px}.wrap{padding:16px}main{padding:18px 16px}.grid{grid-template-columns:1fr}}
+</style>
+</head><body>
+<header><div class="wrap"><div class="hero"><div><h1>⚡ ChatGPT 快速指令庫</h1><p>分類、搜尋、點一下複製。把 99 招變成隨身工具箱。</p></div><div class="search"><input id="q" placeholder="搜尋指令，例如：故事、KPI、比較、程式碼…" autofocus></div></div><div class="filters" id="filters"></div></div></header>
+<main><div class="meta" id="meta"></div><div class="grid" id="grid"></div><div class="empty" id="empty">找不到符合的指令 🔎</div></main>
+<footer>ChatGPT Quick Commands · 可離線使用</footer>
+<script>
+const data=[
+['回答風格','/human','用自然、像真人一樣的語言回答'],['回答風格','/pro','像資深專家一樣回答'],['回答風格','/founder','用創辦人的思維思考'],['回答風格','/skeptic','先挑出問題與漏洞'],['回答風格','/teacher','耐心、清楚地解釋'],['回答風格','/five','用五歲小孩也能懂的方式解釋'],['回答風格','/tight','給我最精簡的答案'],['回答風格','/longform','給我完整無省略的回答'],['回答風格','/sell','寫出以轉換為目標的文案'],['回答風格','/calm','保持冷靜的語氣'],['回答風格','/coach','像教練一樣引導'],
+['深度思考','/dig','深入分析，不要遺漏細節'],['深度思考','/gut','告訴我你的直覺判斷，不只講邏輯'],['深度思考','/devil','從反方立場提出論點'],['深度思考','/firstprinciples','用第一性原理重新拆解這個想法'],['深度思考','/longgame','從五年後的角度思考'],['深度思考','/worstcase','分析最糟的情況是什麼'],['深度思考','/bestcase','分析最理想的情況是什麼'],['深度思考','/tradeoffs','列出每個選擇的取捨與代價'],['深度思考','/reframe','換一個角度重新看這件事'],['深度思考','/zoomout','從更大的視角看整體局勢'],['深度思考','/zoomin','把細節拆開來看'],
+['創意與內容','/remix','從零重新構想這件事'],['創意與內容','/twist','加入一個意想不到的角度'],['創意與內容','/mashup','結合兩個原本不相關的概念'],['創意與內容','/wild','給我最大膽的版本'],['創意與內容','/safe','給我最保守謹慎的版本'],['創意與內容','/name','腦力激盪名稱或標題'],['創意與內容','/openers','寫 10 個不同的開場'],['創意與內容','/story','把它改寫成一個故事'],['創意與內容','/metaphor','用比喻或類比解釋'],['創意與內容','/series','把它規劃成一系列內容'],['創意與內容','/hook','寫一個讓人停下來看的開場 Hook'],
+['商業與策略','/pitch','寫成簡短有力的電梯簡報'],['商業與策略','/goals','把想法轉成可衡量的目標'],['商業與策略','/budget','從成本與回報的角度分析'],['商業與策略','/risk','找出可能出問題的地方'],['商業與策略','/market','分析市場與競爭環境'],['商業與策略','/persona','描述目標受眾'],['商業與策略','/roadmap','規劃執行路線與時間'],['商業與策略','/kpi','定義衡量成功的 KPI'],['商業與策略','/negotiate','幫我準備談判重點'],['商業與策略','/scale','規劃如何擴大規模'],['商業與策略','/exit','思考最終的退場策略'],
+['學習與研究','/teachme','一步一步教我理解'],['學習與研究','/quiz','把內容變成練習題'],['學習與研究','/recap','整理剛剛內容的重點'],['學習與研究','/gaps','找出我遺漏或沒想到的地方'],['學習與研究','/sources','告訴我可以去哪裡進一步學習'],['學習與研究','/debate','分別論述正反雙方觀點'],['學習與研究','/history','解釋這件事是如何演變而來的'],['學習與研究','/forecast','推演接下來可能如何發展'],['學習與研究','/jargon','把專業術語翻成白話'],['學習與研究','/kidsafe','用好奇的小孩也能理解的方式解釋'],['學習與研究','/oneline','用一句話解釋'],
+['整理與格式','/outline','整理成清楚的大綱'],['整理與格式','/checklist','整理成實用確認清單'],['整理與格式','/template','建立一個可重複使用的模板'],['整理與格式','/table','整理成表格'],['整理與格式','/matrix','把選項整理成決策矩陣'],['整理與格式','/timeline','整理成時間軸'],['整理與格式','/bullets','濃縮成條列重點'],['整理與格式','/json','用 JSON 格式整理答案'],['整理與格式','/form','整理成可填寫的表單'],['整理與格式','/script','改寫成適合口說的腳本'],['整理與格式','/brief','寫成主管摘要'],
+['程式開發','/code','寫出可執行的程式碼'],['程式開發','/debug','找出是哪裡出了問題'],['程式開發','/refactor','不改變功能的前提下整理程式碼'],['程式開發','/comment','加上容易理解的程式碼註解'],['程式開發','/testit','為各種邊界情況撰寫測試'],['程式開發','/explainit','逐步解釋這段程式碼實際在做什麼'],['程式開發','/optimize','讓它執行得更快、更精簡'],['程式開發','/convert','轉換成另一種程式語言'],['程式開發','/schema','設計資料結構'],['程式開發','/api','規劃 API Endpoint 設計'],['程式開發','/secure','檢查潛在的安全漏洞'],
+['分析與決策','/compare','並列比較多個選項'],['分析與決策','/proscons','列出優點與缺點'],['分析與決策','/decide','推薦一個選項，並解釋理由'],['分析與決策','/priority','按重要程度排序'],['分析與決策','/root','找出真正的根本原因'],['分析與決策','/data','從資料中找出真正重要的訊號'],['分析與決策','/pattern','找出隱藏其中的趨勢與規律'],['分析與決策','/assumption','找出假設'],['分析與決策','/verify','查證事實'],['分析與決策','/counter','提出反方論點'],['分析與決策','/simplify','刪掉不必要的內容']
+];
+// 圖片中的編號存在排版重複/跳號，因此網頁採分類呈現，不強行沿用錯位編號。
+const cats=['全部',...new Set(data.map(x=>x[0]))]; let active='全部';
+const filters=document.getElementById('filters'), grid=document.getElementById('grid'), q=document.getElementById('q'), meta=document.getElementById('meta'), empty=document.getElementById('empty');
+function drawFilters(){filters.innerHTML='';cats.forEach(c=>{let b=document.createElement('button');b.textContent=c;b.className=c===active?'active':'';b.onclick=()=>{active=c;drawFilters();render()};filters.appendChild(b)})}
+function render(){const s=q.value.trim().toLowerCase();const rows=data.filter(x=>(active==='全部'||x[0]===active)&&(!s||x.join(' ').toLowerCase().includes(s)));grid.innerHTML='';rows.forEach((x,i)=>{let el=document.createElement('article');el.className='card';el.innerHTML=`<div class="top"><div><span class="tag">${x[0]}</span><div class="cmd">${x[1]}</div></div><span class="num">#${data.indexOf(x)+1}</span></div><div class="desc">${x[2]}</div><button class="copy">複製指令</button>`;el.querySelector('.copy').onclick=async(e)=>{await navigator.clipboard.writeText(x[1]);e.target.textContent='已複製 ✓';setTimeout(()=>e.target.textContent='複製指令',900)};grid.appendChild(el)});meta.textContent=`顯示 ${rows.length} / ${data.length} 個指令`;empty.style.display=rows.length?'none':'block'}
+q.addEventListener('input',render);drawFilters();render();
+</script></body></html>
